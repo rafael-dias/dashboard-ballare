@@ -240,11 +240,13 @@
 
             <!-- TABELA 2: ESCOLAS E CLIENTES -->
             <div class="bg-white border border-slate-300 rounded-2xl shadow-sm overflow-hidden">
+                
                 <div class="p-5 border-b border-slate-200 flex justify-between items-center">
                     <div>
                         <h2 class="text-base font-bold text-slate-800"><i class="fa-solid fa-building-columns text-orange-500 mr-2"></i> Faturamento & Pedidos por Escola</h2>
                         <p class="text-xs text-slate-500"></p>
                     </div>
+                    <input type="text" placeholder="Filtrar Escolas..." class="text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-700 focus:outline-none w-64">
                     <span class="text-xs bg-slate-100 border border-slate-300 px-3 py-1.5 rounded-xl font-semibold text-emerald-700">Total Faturado: R$ 540.000,00</span>
                 </div>
                 <div class="overflow-x-auto">
@@ -291,20 +293,20 @@
 
         // LISTA EXTENSA DE PEDIDOS COM VALORES
         const listaPedidos = [
-            { id: "1", nome: "FG004.4 - ALÇA COM V SAIA ASSIMÉTRICA", escola: "Escola 1 ", comp: "Complexo", qtd: 3, valor: "R$ 1.050,00", sem: "Pendente", status: "Aberto" },
-            { id: "2", nome: "Com Tutu Filó", escola: "Escola 2 ", comp: "Simples", qtd: 15, valor: "R$ 4.500,00", sem: "Pendente", status: "Aberto" },
+            { id: "1", nome: "FG004.4 - ALÇA COM V SAIA ASSIMÉTRICA", escola: "Escola 1", comp: "Complexo", qtd: 3, valor: "R$ 1.050,00", sem: "Pendente", status: "Aberto" },
+            { id: "2", nome: "Com Tutu Filó", escola: "Escola 2", comp: "Simples", qtd: 15, valor: "R$ 4.500,00", sem: "Pendente", status: "Aberto" },
             { id: "3", nome: "FG003 - ALÇA COM V E TUTU BANDEJA", escola: "Escola 3", comp: "Médio", qtd: 22, valor: "R$ 3.300,00", sem: "Semana 11", status: "Modelagem" },
            
-            { id: "5", nome: "FG032.2 - FIGURINO COM MANGA BUFANTE E SAIA MÉDIA", escola: "Escola 3 ", comp: "Simples", qtd: 40, valor: "R$ 6.000,00", sem: "Semana 10", status: "Modelagem" },
-            { id: "6", nome: "FG003 - ALÇA COM V E TUTU BANDEJA", escola: "Escola 4 ", comp: "Complexo", qtd: 12, valor: "R$ 5.400,00", sem: "Semana 9", status: "Acabamento" },
+            { id: "5", nome: "FG032.2 - FIGURINO COM MANGA BUFANTE E SAIA MÉDIA", escola: "Escola 1", comp: "Simples", qtd: 40, valor: "R$ 6.000,00", sem: "Semana 10", status: "Modelagem" },
+            { id: "6", nome: "FG003 - ALÇA COM V E TUTU BANDEJA", escola: "Escola 4", comp: "Complexo", qtd: 12, valor: "R$ 5.400,00", sem: "Semana 9", status: "Acabamento" },
           
         ];
 
         // DADOS DE ESCOLAS
         const listaEscolas = [
             { id: "esc1", nome: "Escola 1", totalPed: 18, entregues: 14, prod: 4, qtdFig: "520 un", fat: "R$ 138.840,00", detalhe: "3 Pedidos em andamento para a Semana 9 e 10." },
-            { id: "esc2", nome: "Escola 2 ", totalPed: 12, entregues: 10, prod: 2, qtdFig: "340 un", fat: "R$ 98.500,00", detalhe: "Entrega do espetáculo de final de ano prevista para Sem 12." },
-            { id: "esc3", nome: "Escola 3 ", totalPed: 15, entregues: 11, prod: 4, qtdFig: "410 un", fat: "R$ 142.000,00", detalhe: "Aguardando aprovação do figurino solista." },
+            { id: "esc2", nome: "Escola 2", totalPed: 12, entregues: 10, prod: 2, qtdFig: "340 un", fat: "R$ 98.500,00", detalhe: "Entrega do espetáculo de final de ano prevista para Sem 12." },
+            { id: "esc3", nome: "Escola 3", totalPed: 15, entregues: 11, prod: 4, qtdFig: "410 un", fat: "R$ 142.000,00", detalhe: "Aguardando aprovação do figurino solista." },
             { id: "esc4", nome: "Escola 4", totalPed: 9, entregues: 8, prod: 1, qtdFig: "220 un", fat: "R$ 65.200,00", detalhe: "Pedido de túnicas agendado para início imediato." }
         ];
 
@@ -413,38 +415,104 @@
         }
 
         // POPULAR TABELA DE ESCOLAS
+      // POPULAR TABELA DE ESCOLAS (com lista de pedidos ao expandir)
+        function badgeComplexidade(comp) {
+            const cls = comp === 'Complexo' ? 'bg-rose-100 text-rose-800'
+                : comp === 'Médio' ? 'bg-amber-100 text-amber-800'
+                    : 'bg-slate-100 text-slate-700';
+            return `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${cls}">${comp}</span>`;
+        }
+
+        function badgeStatus(status) {
+            const cls = status === 'Aberto' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800';
+            return `<span class="px-2.5 py-0.5 rounded-full font-semibold text-[10px] ${cls}">${status}</span>`;
+        }
+
         function renderizarTabelaEscolas() {
             const tbody = document.getElementById('tabelaEscolasCorpo');
             tbody.innerHTML = '';
+
             listaEscolas.forEach(e => {
+                const pedidosEscola = listaPedidos.filter(p => p.escola === e.nome);
+                const totalUn = pedidosEscola.reduce((soma, p) => soma + p.qtd, 0);
+
+                // Linha principal da escola
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 cursor-pointer transition-colors";
                 tr.onclick = () => toggleEscola(e.id);
                 tr.innerHTML = `
-                    <td class="p-4 text-center font-bold text-orange-600" id="btn-${e.id}"><i class="fa-solid fa-plus"></i></td>
-                    <td class="p-4 font-bold text-slate-900">${e.nome}</td>
-                    <td class="p-4 text-center font-semibold">${e.totalPed}</td>
-                    <td class="p-4 text-center text-emerald-600 font-bold">${e.entregues}</td>
-                    <td class="p-4 text-center text-amber-600 font-bold">${e.prod}</td>
-                    <td class="p-4 text-center font-bold text-slate-800">${e.qtdFig}</td>
-                    <td class="p-4 text-right font-bold text-emerald-600 text-sm">${e.fat}</td>
-                `;
+            <td class="p-4 text-center font-bold text-orange-600" id="btn-${e.id}"><i class="fa-solid fa-plus"></i></td>
+            <td class="p-4 font-bold text-slate-900">${e.nome}</td>
+            <td class="p-4 text-center font-semibold">${e.totalPed}</td>
+            <td class="p-4 text-center text-emerald-600 font-bold">${e.entregues}</td>
+            <td class="p-4 text-center text-amber-600 font-bold">${e.prod}</td>
+            <td class="p-4 text-center font-bold text-slate-800">${e.qtdFig}</td>
+            <td class="p-4 text-right font-bold text-emerald-600 text-sm">${e.fat}</td>
+        `;
 
+                // Linhas dos pedidos da escola
+                const linhasPedidos = pedidosEscola.length
+                    ? pedidosEscola.map(p => `
+                <tr class="hover:bg-orange-50/50 transition-colors">
+                    <td class="p-2.5 font-bold text-slate-500">${p.id}</td>
+                    <td class="p-2.5 font-bold text-slate-900">${p.nome}</td>
+                    <td class="p-2.5">${badgeComplexidade(p.comp)}</td>
+                    <td class="p-2.5 font-bold">${p.qtd} un</td>
+                    <td class="p-2.5 font-bold text-slate-800">${p.valor}</td>
+                    <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold ${p.sem === 'Pendente' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700'}">${p.sem}</span></td>
+                    <td class="p-2.5">${badgeStatus(p.status)}</td>
+                    <td class="p-2.5 text-center">
+                        <button onclick="event.stopPropagation(); verPedido('${p.id}', '${p.nome}')" class="w-7 h-7 bg-white hover:bg-orange-500 hover:text-white text-slate-600 border border-slate-300 rounded-lg transition-colors inline-flex items-center justify-center" title="Ver Pedido">
+                            <i class="fa-solid fa-eye text-[10px]"></i>
+                        </button>
+                    </td>
+                </tr>`).join('')
+                    : `<tr><td colspan="8" class="p-4 text-center text-slate-400 italic">Nenhum pedido vinculado a esta escola.</td></tr>`;
+
+                // Linha expansível
                 const trDet = document.createElement('tr');
                 trDet.id = e.id;
                 trDet.className = "hidden bg-slate-50 border-l-4 border-orange-500";
                 trDet.innerHTML = `
-                    <td colspan="7" class="p-4 text-xs text-slate-600">
-                        <div class="font-bold text-orange-600 mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Resumo do Cliente:</div>
-                        ${e.detalhe}
-                    </td>
-                `;
+            <td colspan="7" class="p-4 text-xs text-slate-600">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                    <div>
+                        <div class="font-bold text-orange-600 mb-0.5"><i class="fa-solid fa-circle-info mr-1"></i> Resumo do Cliente:</div>
+                        <span>${e.detalhe}</span>
+                    </div>
+                    <span class="bg-white border border-slate-300 px-3 py-1 rounded-lg font-semibold text-slate-700">
+                        ${pedidosEscola.length} pedido(s) listado(s) · ${totalUn} un
+                    </span>
+                </div>
+
+                <div class="bg-white border border-slate-300 rounded-xl overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-200 text-[10px]">
+                                    <th class="p-2.5">Cód</th>
+                                    <th class="p-2.5">Personagem / Figurino</th>
+                                    <th class="p-2.5">Complexidade</th>
+                                    <th class="p-2.5">Qtd</th>
+                                    <th class="p-2.5">Valor</th>
+                                    <th class="p-2.5">Semana</th>
+                                    <th class="p-2.5">Status</th>
+                                    <th class="p-2.5 text-center">Ver</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 text-slate-700">
+                                ${linhasPedidos}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </td>
+        `;
 
                 tbody.appendChild(tr);
                 tbody.appendChild(trDet);
             });
         }
-
         function toggleEscola(id) {
             const row = document.getElementById(id);
             const btn = document.getElementById('btn-' + id);
