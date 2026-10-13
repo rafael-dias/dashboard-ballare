@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Controle de Produção - Figurinos</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js & Plugin DataLabels -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #dfdbdf; }
+    </style>
+</head>
+<body class="font-sans text-slate-800 min-h-screen p-4 md:p-6">
+
+    <div class="max-w-7xl mx-auto space-y-6">
+
+        <!-- CABEÇALHO DA PÁGINA -->
+        <header class="bg-white border border-slate-300 p-5 rounded-2xl shadow-sm flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-orange-500 text-white p-3 rounded-xl shadow-sm">
+                    <i class="fa-solid fa-shirt text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-900">Controle de Produção de Figurinos</h1>
+                    <div class="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+                        <span class="bg-slate-100 px-2.5 py-0.5 rounded-md font-semibold text-orange-600 border border-slate-200">
+                            <i class="fa-regular fa-calendar mr-1"></i> Hoje: <strong>07/10/2026</strong>
+                        </span>
+                        <span class="bg-slate-100 px-2.5 py-0.5 rounded-md font-semibold text-slate-700 border border-slate-200">
+                            Semana Vigente: <strong>Semana 9</strong>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <!-- ACOMPANHAMENTO DA META -->
+                <div class="bg-slate-50 border border-slate-200 px-4 py-2 rounded-xl flex items-center gap-4">
+                    <div>
+                        <span class="text-[9px] uppercase font-bold text-slate-400 tracking-wider block">Meta Realizada (Ano)</span>
+                        <span class="text-sm font-black text-slate-800">R$ 540.000 <span class="text-xs text-emerald-600 font-semibold">(67.5%)</span></span>
+                    </div>
+                    <div class="border-l border-slate-200 pl-4">
+                        <span class="text-[9px] uppercase font-bold text-slate-400 tracking-wider block">Figurinos</span>
+                        <span class="text-sm font-black text-slate-600">2.020 / 2.996</span>
+                    </div>
+                </div>
+
+                <!-- BOTÕES APENAS COM ÍCONES -->
+                <div class="flex items-center gap-2">
+                    <button class="px-2 h-10 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl flex items-center justify-center transition-all shadow-sm" title="Configurações">
+                        Premiações
+                    </button>
+                    <button onclick="abrirMenuRelatorios()" class="w-10 h-10 bg-orange-500 hover:bg-orange-600 text-white rounded-xl flex items-center justify-center transition-all shadow-sm" title="Relatórios">
+                        <i class="fa-solid fa-file-lines text-sm"></i>
+                    </button>
+                    <button  class="w-10 h-10 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl flex items-center justify-center transition-all shadow-sm" title="Configurações">
+                        <i class="fa-solid fa-gear text-orange-500 text-sm"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- CARDS DE RESUMO (KPIS) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white border border-slate-300 p-4 rounded-2xl shadow-sm">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Semana Selecionada</span>
+                <h3 class="text-2xl font-black text-slate-600" id="kpiSemanaTitulo">Semana 9</h3>
+                <p class="text-xs text-slate-500 mt-1" id="kpiCapacidade">Capacidade: 165 un (5 dias)</p>
+            </div>
+            <div class="bg-white border border-slate-300 p-4 rounded-2xl shadow-sm">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Alocado na Semana</span>
+                <h3 class="text-2xl font-black text-slate-600" id="kpiAlocado">477 un</h3>
+                <span class="inline-block mt-1 text-xs px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 font-bold border border-rose-200" id="kpiStatus">⚠️ Excesso Crítico</span>
+            </div>
+            <div class="bg-white border border-slate-300 p-4 rounded-2xl shadow-sm border-l-4 border-l-amber-500">
+                <span class="text-xs font-semibold text-amber-600 uppercase tracking-wider block mb-1"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Pedidos Sem Alocar</span>
+                <h3 class="text-2xl font-black text-amber-600">5 Pedidos</h3>
+                <span class="text-xs text-slate-500 mt-1 block">Total de 85 figurinos pendentes</span>
+            </div>
+            <div class="bg-white border border-slate-300 p-4 rounded-2xl shadow-sm border-l-4 border-l-rose-500">
+                <span class="text-xs font-semibold text-rose-600 uppercase tracking-wider block mb-1"><i class="fa-solid fa-clock-rotate-left mr-1"></i> Pedidos Atrasados</span>
+                <h3 class="text-2xl font-black text-rose-600">2 Pedidos</h3>
+                <span class="text-xs text-slate-500 mt-1 block">Necessitam reorganização</span>
+            </div>
+        </div>
+
+        <!-- CALENDÁRIO, SIMULAÇÃO & GRÁFICO (EMPILHADO VERTICALMENTE) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- PAINEL ESQUERDO: CALENDÁRIO & SIMULAÇÃO -->
+            <div class="bg-white border border-slate-300 p-5 rounded-2xl shadow-sm flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-regular fa-calendar-days text-orange-500"></i> Seleção de Semana
+                        </h2>
+                        <div class="flex gap-1">
+                            <button onclick="mudarPaginaSemanas(-1)" class="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs border border-slate-300"><i class="fa-solid fa-chevron-left"></i></button>
+                            <button onclick="mudarPaginaSemanas(1)" class="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs border border-slate-300"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2" id="gridSemanas"></div>
+                </div>
+
+                <!-- SIMULADOR E ALOCAÇÃO -->
+                <div class="mt-4 pt-4 border-t border-slate-200 space-y-3">
+                    <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider"><i class="fa-solid fa-calculator text-orange-500 mr-1"></i> Simular & Alocar Pedido</h3>
+                    <div>
+                        <label class="block text-[11px] text-slate-500 mb-1">Selecione o pedido pendente:</label>
+                        <select id="pedidoSimulado" class="w-full text-xs bg-slate-50 border border-slate-300 rounded-lg p-2 text-slate-800 focus:ring-1 focus:ring-orange-500">
+                            <option value="15">EX1 - ALÇA COM V SAIA ASSIMÉTRICA (15 un - R$ 4.500)</option>
+                            <option value="22">EX2 -Com Saia sem Tule (22 un - R$ 3.300)</option>
+                            <option value="16">Ex3 - macacões modelo ballare (16 un - R$ 9.600)</option>
+                        </select>
+                    </div>
+
+                    <div class="bg-orange-50 border border-orange-200 p-2.5 rounded-xl text-xs space-y-1">
+                        <div class="flex items-center gap-1.5 font-bold text-orange-800">
+                            <i class="fa-solid fa-wand-magic-sparkles text-orange-500"></i> Sugestão do Sistema:
+                        </div>
+                        <p class="text-[11px] text-slate-600 leading-snug">
+                            <strong class="text-emerald-700">Semana 11</strong> (Folga de 110 un livre).
+                        </p>
+                    </div>
+
+                    <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-300 text-xs space-y-1">
+                        <div class="flex justify-between text-slate-600"><span>Carga Atual:</span> <strong id="simAlocadoAtual" class="text-slate-800">477 un</strong></div>
+                        <div class="flex justify-between text-orange-600 border-t border-slate-200 pt-1"><span>Com Simulação (+<span id="valSim">15</span>):</span> <strong id="simComSimulacao" class="text-amber-600 font-bold">492 un</strong></div>
+                    </div>
+
+                    <button  class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 rounded-xl text-xs transition-colors shadow-sm">
+                        Alocar Pedido na Semana Selecionada
+                    </button>
+                </div>
+            </div>
+
+            <!-- PAINEL DIREITO: GRÁFICO COM BARRAS EMPILHADAS (ALINHAMENTO VERTICAL) -->
+        <!-- PAINEL DIREITO: BARRA ÚNICA POR SEMANA COM 4 ANDARES -->
+        <div class="bg-white border border-slate-300 p-5 rounded-2xl shadow-sm lg:col-span-2 flex flex-col justify-between">
+            <div>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-800"><i class="fa-solid fa-chart-column text-slate-600 mr-2"></i> Carga Semanal vs Capacidade (10 Semanas)</h2>
+                        <p
+                            class="text-xs text-slate-500"></p>
+                    </div>
+        
+                    <div class="flex items-center gap-2">
+                        <button onclick="mudarBlocoGrafico(-1)" class="px-2.5 py-1 text-xs bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg font-semibold text-slate-700"><i
+                                class="fa-solid fa-chevron-left mr-1"></i> Anteriores</button>
+                        <span id="blocoLabel" class="text-xs font-bold text-slate-700">Sem 9 a 18</span>
+                        <button onclick="mudarBlocoGrafico(1)" class="px-2.5 py-1 text-xs bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg font-semibold text-slate-700">Próximas <i
+                                class="fa-solid fa-chevron-right ml-1"></i></button>
+                    </div>
+                </div>
+        
+                <div class="flex flex-wrap items-center gap-4 text-[11px] mb-3 text-slate-600">
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm inline-block border-1 border-slate-600 bg-slate-500/20"></span> Capacidade (frente)</span>
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 bg-slate-700 rounded-sm inline-block"></span> Alocado</span>
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 bg-rose-500 rounded-sm inline-block"></span> Excesso</span>
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 bg-amber-400 rounded-sm inline-block"></span> Simulação</span>
+                </div>
+            </div>
+        
+            <div class="relative h-80 w-full">
+                <canvas id="graficoCarga"></canvas>
+            </div>
+        </div>
+</div>
+        <!-- PAINEL: CALENDÁRIO SEMANAL DE CARGA -->
+        <div class="bg-white border border-slate-300 p-5 rounded-2xl shadow-sm">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
+                <div>
+                    <h2 class="text-sm font-bold text-slate-800"><i class="fa-regular fa-calendar-days text-orange-500 mr-2"></i> Calendário de Carga Semanal</h2>
+                    <p class="text-xs text-slate-500"></p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="mudarCalendarioSemanas(-1)" class="px-2.5 py-1 text-xs bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg font-semibold text-slate-700"><i
+                            class="fa-solid fa-chevron-left mr-1"></i> Anteriores</button>
+                    <span id="calLabel" class="text-xs font-bold text-slate-700"></span>
+                    <button onclick="mudarCalendarioSemanas(1)" class="px-2.5 py-1 text-xs bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg font-semibold text-slate-700">Próximas <i
+                            class="fa-solid fa-chevron-right ml-1"></i></button>
+                </div>
+            </div>
+        
+            <div class="flex flex-wrap items-center gap-4 text-[11px] mb-3 text-slate-600">
+                <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm inline-block border-2 border-slate-600 bg-slate-500/20"></span> Capacidade</span>
+                <span class="flex items-center gap-1"><span class="w-3 h-3 bg-slate-700 rounded-sm inline-block"></span> Alocado</span>
+                <span class="flex items-center gap-1"><span class="w-3 h-3 bg-rose-500 rounded-sm inline-block"></span> Excesso</span>
+                <span class="flex items-center gap-1"><span class="w-3 h-3 bg-amber-400 rounded-sm inline-block"></span> Simulação</span>
+                <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-sm inline-block ring-2 ring-orange-500 bg-white"></span> Hoje</span>
+            </div>
+        
+            <div class="overflow-x-auto">
+                <div id="calendarioSemanal"></div>
+            </div>
+        </div>
+        
+
+        <!-- TABELAS EMPILHADAS -->
+        <div class="space-y-6">
+            
+            <!-- TABELA 1: LISTAGEM DE PEDIDOS -->
+            <div class="bg-white border border-slate-300 rounded-2xl shadow-sm overflow-hidden">
+                <div class="p-5 border-b border-slate-200 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-800"><i class="fa-solid fa-list-check text-orange-500 mr-2"></i> Listagem Detalhada de Pedidos & Prazos</h2>
+                        <p class="text-xs text-slate-500"></p>
+                    </div>
+                    <input type="text" placeholder="Filtrar pedidos..." class="text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-700 focus:outline-none w-64">
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-200">
+                                <th class="p-3.5">Cód</th>
+                                <th class="p-3.5">Personagem / Figurino</th>
+                                <th class="p-3.5">Escola</th>
+                                <th class="p-3.5">Complexidade</th>
+                                <th class="p-3.5">Qtd</th>
+                                <th class="p-3.5">Valor Total</th>
+                                <th class="p-3.5">Semana Alocada</th>
+                                <th class="p-3.5">Status</th>
+                                <th class="p-3.5">Progresso</th>
+                                <th class="p-3.5 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200 text-slate-700" id="tabelaPedidosCorpo">
+                            <!-- Inserido via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TABELA 2: ESCOLAS E CLIENTES -->
+            <div class="bg-white border border-slate-300 rounded-2xl shadow-sm overflow-hidden">
+                <div class="p-5 border-b border-slate-200 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-800"><i class="fa-solid fa-building-columns text-orange-500 mr-2"></i> Faturamento & Pedidos por Escola</h2>
+                        <p class="text-xs text-slate-500"></p>
+                    </div>
+                    <span class="text-xs bg-slate-100 border border-slate-300 px-3 py-1.5 rounded-xl font-semibold text-emerald-700">Total Faturado: R$ 540.000,00</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-200">
+                                <th class="p-4 w-12 text-center">+</th>
+                                <th class="p-4">Escola / Cliente</th>
+                                <th class="p-4 text-center">Total Pedidos</th>
+                                <th class="p-4 text-center">Entregues</th>
+                                <th class="p-4 text-center">Em Produção</th>
+                                <th class="p-4 text-center">Total Figurinos</th>
+                                <th class="p-4 text-right">Faturamento Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200 text-slate-700" id="tabelaEscolasCorpo">
+                            <!-- Inserido via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- SCRIPT JS -->
+    <script>
+        Chart.register(ChartDataLabels);
+
+        // BANCO DE DADOS DE SEMANAS (Ano)
+        const planejamentoSemanas = [
+            { id: "1", cap: 165, alocado: 148 }, { id: "2", cap: 165, alocado: 95 },
+            { id: "3", cap: 165, alocado: 78 },  { id: "4", cap: 165, alocado: 228 },
+            { id: "5", cap: 165, alocado: 209 }, { id: "6", cap: 165, alocado: 285 },
+            { id: "7", cap: 132, alocado: 47 },  { id: "8", cap: 165, alocado: 103 },
+            { id: "9", cap: 165, alocado: 135 }, { id: "10", cap: 165, alocado: 165 },
+            { id: "11", cap: 165, alocado: 55 }, { id: "12", cap: 165, alocado: 120 },
+            { id: "13", cap: 165, alocado: 140 }, { id: "14", cap: 165, alocado: 90 },
+            { id: "15", cap: 165, alocado: 180 }, { id: "16", cap: 165, alocado: 210 },
+            { id: "17", cap: 165, alocado: 75 },  { id: "18", cap: 165, alocado: 110 },
+            { id: "19", cap: 165, alocado: 60 },  { id: "20", cap: 165, alocado: 130 }
+        ];
+
+        // LISTA EXTENSA DE PEDIDOS COM VALORES
+        const listaPedidos = [
+            { id: "1", nome: "FG004.4 - ALÇA COM V SAIA ASSIMÉTRICA", escola: "Escola 1 ", comp: "Complexo", qtd: 3, valor: "R$ 1.050,00", sem: "Pendente", status: "Aberto" },
+            { id: "2", nome: "Com Tutu Filó", escola: "Escola 2 ", comp: "Simples", qtd: 15, valor: "R$ 4.500,00", sem: "Pendente", status: "Aberto" },
+            { id: "3", nome: "FG003 - ALÇA COM V E TUTU BANDEJA", escola: "Escola 3", comp: "Médio", qtd: 22, valor: "R$ 3.300,00", sem: "Semana 11", status: "Modelagem" },
+           
+            { id: "5", nome: "FG032.2 - FIGURINO COM MANGA BUFANTE E SAIA MÉDIA", escola: "Escola 3 ", comp: "Simples", qtd: 40, valor: "R$ 6.000,00", sem: "Semana 10", status: "Modelagem" },
+            { id: "6", nome: "FG003 - ALÇA COM V E TUTU BANDEJA", escola: "Escola 4 ", comp: "Complexo", qtd: 12, valor: "R$ 5.400,00", sem: "Semana 9", status: "Acabamento" },
+          
+        ];
+
+        // DADOS DE ESCOLAS
+        const listaEscolas = [
+            { id: "esc1", nome: "Escola 1", totalPed: 18, entregues: 14, prod: 4, qtdFig: "520 un", fat: "R$ 138.840,00", detalhe: "3 Pedidos em andamento para a Semana 9 e 10." },
+            { id: "esc2", nome: "Escola 2 ", totalPed: 12, entregues: 10, prod: 2, qtdFig: "340 un", fat: "R$ 98.500,00", detalhe: "Entrega do espetáculo de final de ano prevista para Sem 12." },
+            { id: "esc3", nome: "Escola 3 ", totalPed: 15, entregues: 11, prod: 4, qtdFig: "410 un", fat: "R$ 142.000,00", detalhe: "Aguardando aprovação do figurino solista." },
+            { id: "esc4", nome: "Escola 4", totalPed: 9, entregues: 8, prod: 1, qtdFig: "220 un", fat: "R$ 65.200,00", detalhe: "Pedido de túnicas agendado para início imediato." }
+        ];
+
+        let semanaAtivaId = "9";
+        let indiceBlocoCalendario = 8; // Inicia na semana 9 (índice 8)
+        let indiceBlocoGrafico = 8;    // Inicia exibindo a partir da semana 9 (Próximas 10 semanas)
+        // CALENDÁRIO SEMANAL
+            const HOJE = new Date(2026, 9, 7);            // 07/10/2026 (igual ao cabeçalho)
+            const INICIO_SEMANA_9 = new Date(2026, 9, 5); // segunda-feira da Semana 9
+            const CAP_DIA = 33;                           // 165 un / 5 dias
+            const MESES_ABREV = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+            let indiceCalendarioSemanas = 8;
+
+        function renderizarCalendario() {
+            const container = document.getElementById('gridSemanas');
+            container.innerHTML = '';
+            const semanasVisiveis = planejamentoSemanas.slice(indiceBlocoCalendario, indiceBlocoCalendario + 4);
+
+            semanasVisiveis.forEach(s => {
+                const isSelected = s.id === semanaAtivaId;
+                const saldo = s.cap - s.alocado;
+                const isEstourado = saldo < 0;
+
+                const card = document.createElement('div');
+                card.onclick = () => { semanaAtivaId = s.id; renderizarCalendario(); atualizarKPIs(); };
+                card.className = `p-2.5 rounded-xl border cursor-pointer transition-all ${
+                    isSelected ? 'bg-orange-50 border-orange-400 ring-2 ring-orange-400/40' : 'bg-slate-50 border-slate-300 hover:border-slate-400'
+                }`;
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs font-black ${isSelected ? 'text-orange-600' : 'text-slate-800'}">Semana ${s.id}</span>
+                        <span class="text-[10px] font-bold ${isEstourado ? 'text-rose-600' : 'text-emerald-600'}">${isEstourado ? saldo : '+' + saldo}</span>
+                    </div>
+                    <div class="mt-1 flex justify-between text-[10px] text-slate-600">
+                        <span>Aloc: <strong>${s.alocado}</strong></span>
+                        <span>Cap: ${s.cap}</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function mudarPaginaSemanas(dir) {
+            indiceBlocoCalendario += dir * 2;
+            if (indiceBlocoCalendario < 0) indiceBlocoCalendario = 0;
+            if (indiceBlocoCalendario > planejamentoSemanas.length - 4) indiceBlocoCalendario = planejamentoSemanas.length - 4;
+            renderizarCalendario();
+        }
+
+        function atualizarKPIs() {
+            const s = planejamentoSemanas.find(item => item.id === semanaAtivaId);
+            document.getElementById('kpiSemanaTitulo').innerText = `Semana ${s.id}`;
+            document.getElementById('kpiCapacidade').innerText = `Capacidade Teto: ${s.cap} un`;
+            document.getElementById('kpiAlocado').innerText = s.alocado + " un";
+            
+            const saldo = s.cap - s.alocado;
+            const elStatus = document.getElementById('kpiStatus');
+            if(saldo < 0) {
+                elStatus.innerText = `⚠️ Excesso (${saldo} un)`;
+                elStatus.className = "inline-block mt-1 text-xs px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 font-bold border border-rose-200";
+            } else {
+                elStatus.innerText = `🟢 Disponível (+${saldo} un)`;
+                elStatus.className = "inline-block mt-1 text-xs px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 font-bold border border-emerald-200";
+            }
+            document.getElementById('simAlocadoAtual').innerText = s.alocado + " un";
+            atualizarGrafico();
+        }
+
+        // POPULAR TABELA DE PEDIDOS
+        function renderizarTabelaPedidos() {
+            const tbody = document.getElementById('tabelaPedidosCorpo');
+            tbody.innerHTML = '';
+            listaPedidos.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors";
+                tr.innerHTML = `
+                    <td class="p-3.5 font-bold text-slate-500">${p.id}</td>
+                    <td class="p-3.5 font-bold text-slate-900">${p.nome}</td>
+                    <td class="p-3.5 text-slate-600">${p.escola}</td>
+                    <td class="p-3.5"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        p.comp === 'Complexo' ? 'bg-rose-100 text-rose-800' : p.comp === 'Médio' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700'
+                    }">${p.comp}</span></td>
+                    <td class="p-3.5 font-bold">${p.qtd} un</td>
+                    <td class="p-3.5 font-bold text-slate-800">${p.valor}</td>
+                    <td class="p-3.5"><span class="px-2 py-1 rounded font-bold ${p.sem === 'Pendente' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700'}">${p.sem}</span></td>
+                    <td class="p-3.5"><span class="px-2.5 py-1 rounded-full font-semibold text-[10px] ${
+                        p.status === 'Aberto' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
+                    }">${p.status}</span></td>
+                    <td class="p-3.5">
+                                    <div class="flex justify-between mb-1 text-[11px]">
+                                        <span class="text-amber-600 font-semibold">Faltam 20 dias</span>
+                                    </div>
+                                    <div class="w-32 bg-slate-100 h-2 rounded-full overflow-hidden">
+                                        <div class="bg-amber-500 h-full" style="width: 75%"></div>
+                                    </div>
+                                </td>
+                    <td class="p-3.5 text-center">
+                        <button onclick="verPedido('${p.id}', '${p.nome}')" class="w-8 h-8 bg-slate-100 hover:bg-orange-500 hover:text-white text-slate-600 rounded-lg transition-colors inline-flex items-center justify-center" title="Ver Pedido">
+                            <i class="fa-solid fa-eye text-xs"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // POPULAR TABELA DE ESCOLAS
+        function renderizarTabelaEscolas() {
+            const tbody = document.getElementById('tabelaEscolasCorpo');
+            tbody.innerHTML = '';
+            listaEscolas.forEach(e => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 cursor-pointer transition-colors";
+                tr.onclick = () => toggleEscola(e.id);
+                tr.innerHTML = `
+                    <td class="p-4 text-center font-bold text-orange-600" id="btn-${e.id}"><i class="fa-solid fa-plus"></i></td>
+                    <td class="p-4 font-bold text-slate-900">${e.nome}</td>
+                    <td class="p-4 text-center font-semibold">${e.totalPed}</td>
+                    <td class="p-4 text-center text-emerald-600 font-bold">${e.entregues}</td>
+                    <td class="p-4 text-center text-amber-600 font-bold">${e.prod}</td>
+                    <td class="p-4 text-center font-bold text-slate-800">${e.qtdFig}</td>
+                    <td class="p-4 text-right font-bold text-emerald-600 text-sm">${e.fat}</td>
+                `;
+
+                const trDet = document.createElement('tr');
+                trDet.id = e.id;
+                trDet.className = "hidden bg-slate-50 border-l-4 border-orange-500";
+                trDet.innerHTML = `
+                    <td colspan="7" class="p-4 text-xs text-slate-600">
+                        <div class="font-bold text-orange-600 mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Resumo do Cliente:</div>
+                        ${e.detalhe}
+                    </td>
+                `;
+
+                tbody.appendChild(tr);
+                tbody.appendChild(trDet);
+            });
+        }
+
+        function toggleEscola(id) {
+            const row = document.getElementById(id);
+            const btn = document.getElementById('btn-' + id);
+            if (row.classList.contains('hidden')) {
+                row.classList.remove('hidden');
+                btn.innerHTML = '<i class="fa-solid fa-minus"></i>';
+            } else {
+                row.classList.add('hidden');
+                btn.innerHTML = '<i class="fa-solid fa-plus"></i>';
+            }
+        }
+
+        function verPedido(codigo, nome) {
+            // alert(`Visualizando detalhes do Pedido:\n\nCódigo: ${codigo}\nItem: ${nome}`);
+        }
+
+        function abrirMenuRelatorios() {
+            // alert('Relatórios do Sistema:\n1. Imprimir Carga Semanal\n2. Exportar Faturamento em PDF\n3. Exportar Tabela Excel');
+        }
+
+        // GRÁFICO BARRAS EMPILHADAS (VERTICALMENTE ALINHADASH)
+        const ctx = document.getElementById('graficoCarga').getContext('2d');
+        let graficoCarga;
+
+        function mudarBlocoGrafico(dir) {
+            indiceBlocoGrafico += dir * 5;
+            if (indiceBlocoGrafico < 0) indiceBlocoGrafico = 0;
+            if (indiceBlocoGrafico > planejamentoSemanas.length - 10) indiceBlocoGrafico = planejamentoSemanas.length - 10;
+            atualizarGrafico();
+        }
+
+       function totalNoIndice(chart, i) {
+            // Alocado + Excesso + Simulação (os 3 andares empilhados)
+            return chart.data.datasets[1].data[i] + chart.data.datasets[2].data[i] + chart.data.datasets[3].data[i];
+        }
+
+        function atualizarGrafico() {
+            const qtdSimulada = parseInt(document.getElementById('pedidoSimulado').value);
+            const subSemanas = planejamentoSemanas.slice(indiceBlocoGrafico, indiceBlocoGrafico + 10);
+
+            document.getElementById('blocoLabel').innerText = `Sem ${subSemanas[0].id} a ${subSemanas[subSemanas.length - 1].id}`;
+
+            // Mantém o simulador lateral sincronizado com a semana ativa
+            const sAtiva = planejamentoSemanas.find(item => item.id === semanaAtivaId);
+            document.getElementById('valSim').innerText = qtdSimulada;
+            document.getElementById('simComSimulacao').innerText = (sAtiva.alocado + qtdSimulada) + ' un';
+
+            renderizarCalendarioSemanal();
+
+            const labels = subSemanas.map(s => ['Sem ' + s.id, 'cap ' + s.cap]);
+            const capacidades = subSemanas.map(s => s.cap);
+            const dentroCap = subSemanas.map(s => Math.min(s.alocado, s.cap));
+            const excesso = subSemanas.map(s => Math.max(0, s.alocado - s.cap));
+            const simulacao = subSemanas.map(s => s.id === semanaAtivaId ? qtdSimulada : 0);
+
+            if (graficoCarga) {
+                graficoCarga.data.labels = labels;
+                graficoCarga.data.datasets[0].data = capacidades;
+                graficoCarga.data.datasets[1].data = dentroCap;
+                graficoCarga.data.datasets[2].data = excesso;
+                graficoCarga.data.datasets[3].data = simulacao;
+                graficoCarga.update();
+                return;
+            }
+
+            graficoCarga = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {   // ANDAR 1: CAPACIDADE (sempre na frente, transparente, sempre visível)
+                            label: 'Capacidade',
+                            data: capacidades,
+                            stack: 'capacidade',
+                            grouped: false,
+                            order: 0,
+                            backgroundColor: 'rgba(160, 160, 160, 0.5)',
+                            borderColor: '#9fa0a0',
+                            borderWidth: 0,
+                            borderSkipped: false,
+                            borderRadius: 4,
+                            datalabels: { display: false }
+                        },
+                        {   // ANDAR 2: ALOCADO (até o limite da capacidade)
+                            label: 'Figurinos Alocados',
+                            data: dentroCap,
+                            stack: 'carga',
+                            grouped: false,
+                            order: 1,
+                            backgroundColor: '#334155',
+                            datalabels: {
+                                display: c => c.dataset.data[c.dataIndex] >= 20,
+                                anchor: 'center', align: 'center',
+                                color: '#ffffff', font: { weight: 'bold', size: 10 },
+                                formatter: v => v
+                            }
+                        },
+                        {   // ANDAR 3: EXCESSO (só aparece quando alocado > capacidade)
+                            label: 'Excesso',
+                            data: excesso,
+                            stack: 'carga',
+                            grouped: false,
+                            order: 2,
+                            backgroundColor: '#f43f5e',
+                            datalabels: {
+                                display: c => c.dataset.data[c.dataIndex] >= 20,
+                                anchor: 'center', align: 'center',
+                                color: '#ffffff', font: { weight: 'bold', size: 10 },
+                                formatter: v => '+' + v
+                            }
+                        },
+                        {   // ANDAR 4: SIMULAÇÃO (no topo da pilha)
+                            label: 'Simulação (+)',
+                            data: simulacao,
+                            stack: 'carga',
+                            grouped: false,
+                            order: 3,
+                            backgroundColor: '#fbbf24',
+                            datalabels: {
+                                // Rótulo do total (alocado + excesso + simulação) no topo da pilha
+                                display: c => totalNoIndice(c.chart, c.dataIndex) > 0,
+                                anchor: 'end', align: 'top',
+                                font: { weight: 'bold', size: 10 },
+                                color: c => totalNoIndice(c.chart, c.dataIndex) > c.chart.data.datasets[0].data[c.dataIndex] ? '#e11d48' : '#1e293b',
+                                formatter: (v, c) => totalNoIndice(c.chart, c.dataIndex)
+                            }
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: { top: 25 } },
+                    interaction: { mode: 'index', intersect: false },
+                    onClick: (evt, els, chart) => {
+                        const pts = chart.getElementsAtEventForMode(evt, 'index', { intersect: false }, true);
+                        if (!pts.length) return;
+                        semanaAtivaId = chart.data.labels[pts[0].index][0].replace('Sem ', '');
+                        renderizarCalendario();
+                        atualizarKPIs();
+                    },
+                    onHover: (evt, els) => { evt.native.target.style.cursor = els.length ? 'pointer' : 'default'; },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: { display: false },
+                            ticks: {
+                                font: { size: 11, weight: 'bold' },
+                                // Destaca a semana selecionada
+                                color: c => {
+                                    const lbl = c.chart.data.labels[c.index];
+                                    return lbl && lbl[0] === 'Sem ' + semanaAtivaId ? '#ea580c' : '#334155';
+                                }
+                            }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            grid: { color: '#e2e8f0' },
+                            ticks: { color: '#64748b', font: { size: 10 } }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: { display: false },
+                        tooltip: {
+                            filter: item => item.parsed.y > 0,
+                            callbacks: {
+                                title: items => items[0].chart.data.labels[items[0].dataIndex][0],
+                                label: c => ` ${c.dataset.label}: ${c.parsed.y} un`,
+                                footer: items => {
+                                    const ch = items[0].chart, i = items[0].dataIndex;
+                                    const cap = ch.data.datasets[0].data[i];
+                                    const tot = totalNoIndice(ch, i);
+                                    return tot > cap ? `Excesso total: ${tot - cap} un` : `Livre: ${cap - tot} un`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ===== CALENDÁRIO SEMANAL =====
+        function inicioDaSemana(id) {
+            const d = new Date(INICIO_SEMANA_9);
+            d.setDate(d.getDate() + (parseInt(id) - 9) * 7);
+            return d;
+        }
+
+        function fmtDataCurta(d) {
+            return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
+        }
+
+        function selecionarSemana(id) {
+            semanaAtivaId = id;
+            renderizarCalendario();
+            atualizarKPIs();
+        }
+
+        function mudarCalendarioSemanas(dir) {
+            indiceCalendarioSemanas += dir * 3;
+            if (indiceCalendarioSemanas < 0) indiceCalendarioSemanas = 0;
+            if (indiceCalendarioSemanas > planejamentoSemanas.length - 6) indiceCalendarioSemanas = planejamentoSemanas.length - 6;
+            renderizarCalendarioSemanal();
+        }
+
+        function renderizarCalendarioSemanal() {
+            const el = document.getElementById('calendarioSemanal');
+            if (!el) return;
+
+            const qtdSim = parseInt(document.getElementById('pedidoSimulado').value) || 0;
+            const semanas = planejamentoSemanas.slice(indiceCalendarioSemanas, indiceCalendarioSemanas + 6);
+            const colunas = 'grid-template-columns: repeat(7, minmax(0, 1fr)) 230px;';
+            const diasSemana = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+
+            const primeiroDia = inicioDaSemana(semanas[0].id);
+            const ultimoDia = inicioDaSemana(semanas[semanas.length - 1].id);
+            ultimoDia.setDate(ultimoDia.getDate() + 6);
+            document.getElementById('calLabel').innerText = `${fmtDataCurta(primeiroDia)} a ${fmtDataCurta(ultimoDia)}`;
+
+            let html = `<div style="min-width: 820px;">
+        <div class="grid gap-1.5 mb-1.5 text-[10px] font-bold uppercase text-slate-400 text-center" style="${colunas}">
+            ${diasSemana.map(d => `<div>${d}</div>`).join('')}
+            <div class="text-left pl-2">Carga da semana</div>
+        </div>`;
+
+            semanas.forEach(s => {
+                const ini = inicioDaSemana(s.id);
+                const diasUteis = Math.round(s.cap / CAP_DIA);
+                const ativa = s.id === semanaAtivaId;
+                const sim = ativa ? qtdSim : 0;
+                const total = s.alocado + sim;
+                const dentro = Math.min(s.alocado, s.cap);
+                const exc = Math.max(0, s.alocado - s.cap);
+                const saldo = s.cap - s.alocado;
+                const saldoSim = s.cap - total;
+                const escala = Math.max(s.cap, total);
+                const pct = v => (v / escala * 100).toFixed(2);
+
+                // Cor da linha conforme a ocupação
+                let tom = 'bg-slate-50/60 border-slate-200';
+                let chip = `<span class="text-slate-700">+${saldo} livre</span>`;
+                if (saldo < 0) {
+                    tom = 'bg-rose-50/70 border-rose-200';
+                    chip = `<span class="text-rose-600">${-saldo} excesso</span>`;
+                } else if (s.alocado / s.cap >= 0.85) {
+                    tom = 'bg-amber-50 border-amber-200';
+                    chip = `<span class="text-amber-700">+${saldo} livre</span>`;
+                }
+
+                // Células dos dias
+                let dias = '';
+                for (let k = 0; k < 7; k++) {
+                    const d = new Date(ini);
+                    d.setDate(ini.getDate() + k);
+                    const fimDeSemana = k >= 5;
+                    const folga = !fimDeSemana && k >= diasUteis;
+                    const ehHoje = d.toDateString() === HOJE.toDateString();
+                    const mostrarMes = d.getDate() === 1 || k === 0;
+
+                    let cls = 'bg-white border-slate-200 text-slate-700';
+                    let sub = `${CAP_DIA} un`;
+                    if (fimDeSemana) { cls = 'bg-slate-100/70 border-slate-200 text-slate-400'; sub = ''; }
+                    if (folga) { cls = 'bg-slate-200/70 border-dashed border-slate-300 text-slate-400'; sub = 'folga'; }
+                    if (ehHoje) cls += ' ring-2 ring-orange-500 border-orange-500';
+
+                    dias += `<div class="h-12 rounded-lg border p-1 flex flex-col justify-between ${cls}">
+                <span class="text-[12px] font-bold leading-none">${d.getDate()}${mostrarMes ? `<span class="font-normal text-[9px] ml-0.5">${MESES_ABREV[d.getMonth()]}</span>` : ''}</span>
+                <span class="text-[9px] leading-none ${folga ? 'italic' : 'text-slate-400'}">${sub}</span>
+            </div>`;
+                }
+
+                // Mini barra horizontal com os mesmos 4 andares do gráfico
+                const barra = `<div class="relative h-4 rounded bg-slate-100 overflow-hidden">
+            <div class="absolute inset-y-0 left-0 bg-slate-700" style="width:${pct(dentro)}%"></div>
+            <div class="absolute inset-y-0 bg-rose-500" style="left:${pct(dentro)}%; width:${pct(exc)}%"></div>
+            <div class="absolute inset-y-0 bg-amber-400" style="left:${pct(s.alocado)}%; width:${pct(sim)}%"></div>
+            <div class="absolute inset-y-0 left-0 box-border border-0 border-slate-600 bg-slate-500/20 rounded" style="width:${pct(s.cap)}%"></div>
+        </div>`;
+
+                const resumo = `<div class="pl-2 pr-1 flex flex-col justify-center gap-1">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-black ${ativa ? 'text-orange-600' : 'text-slate-800'}">Semana ${s.id}</span>
+                <span class="text-[10px] font-bold">${chip}</span>
+            </div>
+            ${barra}
+            <div class="flex justify-between text-[10px] text-slate-600">
+                <span>Aloc <b>${s.alocado}</b>${sim ? ` <b class="text-amber-600">+${sim}</b>` : ''}</span>
+                <span>Cap <b>${s.cap}</b></span>
+            </div>
+            ${sim ? `<div class="text-[10px] font-semibold ${saldoSim < 0 ? 'text-rose-600' : 'text-emerald-700'}">Com simulação: ${saldoSim < 0 ? (-saldoSim) + ' excesso' : saldoSim + ' livre'}</div>` : ''}
+        </div>`;
+
+                html += `<div onclick="selecionarSemana('${s.id}')" class="grid gap-1.5 p-1.5 mb-1.5 rounded-xl border cursor-pointer transition-all ${tom} ${ativa ? 'ring-2 ring-orange-400' : 'hover:border-slate-400'}" style="${colunas}">
+            ${dias}${resumo}
+        </div>`;
+            });
+
+            html += '</div>';
+            el.innerHTML = html;
+        }
+
+        document.getElementById('pedidoSimulado').addEventListener('change', () => {
+            const s = planejamentoSemanas.find(item => item.id === semanaAtivaId);
+            const qtdAdicional = parseInt(document.getElementById('pedidoSimulado').value);
+            document.getElementById('valSim').innerText = qtdAdicional;
+            document.getElementById('simComSimulacao').innerText = (s.alocado + qtdAdicional) + " un";
+            atualizarGrafico();
+        });
+
+        // Inicialização dos módulos
+        renderizarCalendario();
+        atualizarKPIs();
+        renderizarTabelaPedidos();
+        renderizarTabelaEscolas();
+    </script>
+</body>
+</html>
